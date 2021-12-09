@@ -23,6 +23,21 @@ parser.add_argument(
 
 
 def parse_logs(log_file_data, ip):
+    """
+    Used to parse logs and return filtered output on the basis of ip
+    If the ip is `None`, it returns all the log lines
+
+    Parameters
+    ----------
+    log_file_data : list
+        Log file data, each line parsed into one entity of the list
+    ip : str
+        IP according to which we need to filter out the output
+    Returns
+    --------
+    list
+        A list of filtered log lines on the basis of IP
+    """
     # A global try-catch in case any issues with `ip` the function
     # should exit
     filtered_logs = []
