@@ -2,8 +2,8 @@ APP=weblog_helper
 
 .PHONY: run
 run:
-	. ./env/bin/activate && chmod +x ./set-env-vars.sh && . ./set-env-vars.sh && python main.py
+	chmod +x weblog_helper.py && ./weblog_helper.py
 
 .PHONY: test
 test:
-	. ./env/bin/activate && chmod +x ./set-env-vars.sh && . ./set-env-vars.sh && python test_main.py
+	chmod +x test_main.py && ./test_main.py
