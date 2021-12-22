@@ -26,8 +26,14 @@ parser.add_argument(
     "--top-ips",
     type=int,
     required=False,
-    default="public_access.log.txt",
-    help="Log file path",
+    help="Get Top IPs",
+)
+
+parser.add_argument(
+    "--rpm",
+    required=False,
+    help="Get Request Per Minute",
+    action="store_true",
 )
 
 
@@ -44,6 +50,24 @@ def get_top_ips(log_file_data, no_of_ips):
     except Exception as e:
         print(f"Exception in get_top_ips {e}")
     return sortedIPList[:no_of_ips]
+
+
+def get_rpm(log_file_data):
+    try:
+        # defaultdict with '0' as value : https://stackoverflow.com/a/31838824
+        timeList, sortedTimeList = defaultdict(int), []
+        for log in log_file_data:
+            timeStamp = log.split(SEPARATOR)[3]
+            timeStamp = timeStamp[
+                1:-3
+            ]  # Removing '[' and ':SS]'; Can also convert string to timestamp but is that required 🤔
+            timeList[timeStamp] = timeList[timeStamp] + 1
+        sortedTimeList = sorted(
+            timeList.items(), key=lambda kv: (kv[1], kv[0]), reverse=False
+        )
+    except Exception as e:
+        print(f"Exception in get_rpm {e}")
+    return sortedTimeList
 
 
 def parse_logs(log_file_data, ip):
@@ -94,6 +118,10 @@ def main():
             sortedIPList = get_top_ips(log_file_data, args.top_ips)
             for ip in sortedIPList:
                 print(ip)
+        elif args.rpm is not None:
+            sortedTimeList = get_rpm(log_file_data)
+            for timeData in sortedTimeList:
+                print(timeData)
         else:
             filtered_logs = parse_logs(log_file_data, args.ip)
             for log in filtered_logs:
