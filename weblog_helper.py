@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import argparse
 import ipaddress
+from datetime import datetime
 from collections import defaultdict
 
 SEPARATOR = " "
@@ -14,6 +15,7 @@ parser.add_argument(
     required=False,
     help="Filter logs with this IP",
 )
+
 parser.add_argument(
     "--log-file",
     type=str,
@@ -34,6 +36,20 @@ parser.add_argument(
     required=False,
     help="Get Request Per Minute",
     action="store_true",
+)
+
+parser.add_argument(
+    "--start-time",
+    type=str,
+    required=False,
+    help="Start time",
+)
+
+parser.add_argument(
+    "--end-time",
+    type=str,
+    required=False,
+    help="End time",
 )
 
 
@@ -68,6 +84,24 @@ def get_rpm(log_file_data):
     except Exception as e:
         print(f"Exception in get_rpm {e}")
     return sortedTimeList
+
+
+def get_logs_for_given_timeperiod(log_file_data, start_time, end_time):
+    output_log = []
+    start_time = datetime.strptime(start_time, "%H:%M")
+    end_time = datetime.strptime(end_time, "%H:%M")
+    for log in log_file_data:
+        try:
+            timeStamp = log.split(SEPARATOR)[3]
+            timeStamp = timeStamp[1:]
+            d = datetime.strptime(timeStamp, "%d/%b/%Y:%H:%M:%S")
+            if (d.hour >= start_time.hour and d.minute >= start_time.minute) and (
+                d.hour <= end_time.hour and d.minute <= end_time.minute
+            ):
+                output_log.append(log)
+        except Exception as e:
+            print(f"Error in get_logs_for_given_timeperiod : {e}")
+    return output_log
 
 
 def parse_logs(log_file_data, ip):
@@ -114,6 +148,10 @@ def main():
     try:
         with open(args.log_file, "r") as f:
             log_file_data = f.readlines()
+        if args.start_time is not None and args.end_time is not None:
+            log_file_data = get_logs_for_given_timeperiod(
+                log_file_data, args.start_time, args.end_time
+            )
         if args.top_ips is not None:
             sortedIPList = get_top_ips(log_file_data, args.top_ips)
             for ip in sortedIPList:
