@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import argparse
 import ipaddress
+from collections import defaultdict
 
 SEPARATOR = " "
 parser = argparse.ArgumentParser(
@@ -20,6 +21,29 @@ parser.add_argument(
     default="public_access.log.txt",
     help="Log file path",
 )
+
+parser.add_argument(
+    "--top-ips",
+    type=int,
+    required=False,
+    default="public_access.log.txt",
+    help="Log file path",
+)
+
+
+def get_top_ips(log_file_data, no_of_ips):
+    try:
+        # defaultdict with '0' as value : https://stackoverflow.com/a/31838824
+        ipList, sortedIPList = defaultdict(int), []
+        for log in log_file_data:
+            IP = log.split(SEPARATOR)[0]
+            ipList[IP] = ipList[IP] + 1
+        sortedIPList = sorted(
+            ipList.items(), key=lambda kv: (kv[1], kv[0]), reverse=True
+        )
+    except Exception as e:
+        print(f"Exception in get_top_ips {e}")
+    return sortedIPList[:no_of_ips]
 
 
 def parse_logs(log_file_data, ip):
@@ -66,9 +90,14 @@ def main():
     try:
         with open(args.log_file, "r") as f:
             log_file_data = f.readlines()
-        filtered_logs = parse_logs(log_file_data, args.ip)
-        for log in filtered_logs:
-            print(log, end="")
+        if args.top_ips is not None:
+            sortedIPList = get_top_ips(log_file_data, args.top_ips)
+            for ip in sortedIPList:
+                print(ip)
+        else:
+            filtered_logs = parse_logs(log_file_data, args.ip)
+            for log in filtered_logs:
+                print(log, end="")
     except Exception as e:
         print(f"Error reading log file : {e}")
 
